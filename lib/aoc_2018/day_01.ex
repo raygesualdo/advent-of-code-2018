@@ -30,7 +30,6 @@ defmodule Aoc2018.Day01 do
 
     def solve(input) do
       input
-      |> String.split()
       |> Enum.map(&split/1)
       |> Enum.reduce(0, &do_operation/2)
     end
@@ -74,7 +73,6 @@ defmodule Aoc2018.Day01 do
 
     def solve(input) do
       input
-      |> String.split()
       |> Enum.map(&split/1)
       |> reduce()
     end
