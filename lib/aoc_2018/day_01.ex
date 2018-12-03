@@ -30,18 +30,8 @@ defmodule Aoc2018.Day01 do
 
     def solve(input) do
       input
-      |> Enum.map(&split/1)
-      |> Enum.reduce(0, &do_operation/2)
-    end
-
-    def split(string), do: string |> String.trim() |> String.split_at(1)
-
-    def do_operation({operation, value}, accumulator) do
-      case operation do
-        "+" -> accumulator + String.to_integer(value)
-        "-" -> accumulator - String.to_integer(value)
-        _ -> accumulator
-      end
+      |> Enum.map(&String.to_integer/1)
+      |> Enum.sum()
     end
   end
 
@@ -73,46 +63,15 @@ defmodule Aoc2018.Day01 do
 
     def solve(input) do
       input
-      |> Enum.map(&split/1)
-      |> reduce()
+      |> Enum.map(&String.to_integer/1)
+      |> Stream.cycle()
+      |> Enum.reduce_while({0, MapSet.new()}, &find_duplicate/2)
     end
 
-    def split(string), do: string |> String.trim() |> String.split_at(1)
-
-    def reduce(list, accumulator \\ {0, [0], nil}) do
-      result = list |> Enum.reduce(accumulator, &iterate/2)
-      {_sum, _frequencies, duplicate} = result
-
-      case duplicate do
-        nil -> reduce(list, result)
-        _ -> duplicate
-      end
-    end
-
-    def iterate({operation, value}, {sum, frequencies, duplicate}) do
-      if duplicate != nil do
-        {sum, frequencies, duplicate}
-      else
-        with new_sum <- do_operation(operation, value, sum),
-             new_frequencies <- [new_sum | frequencies],
-             duplicate <- test_duplicate(frequencies, new_sum) do
-          {new_sum, new_frequencies, duplicate}
-        end
-      end
-    end
-
-    def test_duplicate(list, value) do
-      case Enum.member?(list, value) do
-        true -> value
-        false -> nil
-      end
-    end
-
-    def do_operation(operation, value, sum) do
-      case operation do
-        "+" -> sum + String.to_integer(value)
-        "-" -> sum - String.to_integer(value)
-        _ -> sum
+    def find_duplicate(value, {sum, set_of_sums}) do
+      case MapSet.member?(set_of_sums, sum) do
+        true -> {:halt, sum}
+        false -> {:cont, {value + sum, MapSet.put(set_of_sums, sum)}}
       end
     end
   end
