@@ -77,8 +77,6 @@ defmodule Aoc2018.Day01 do
       |> String.split()
       |> Enum.map(&split/1)
       |> reduce()
-
-      Atom.to_string(__MODULE__)
     end
 
     def split(string), do: string |> String.trim() |> String.split_at(1)
