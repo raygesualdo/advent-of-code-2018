@@ -1,0 +1,14 @@
+defmodule Aoc2018.Day<%= day %>Test do
+  use ExUnit.Case, async: true
+
+  alias Aoc2018.Day<%= day %>.Part1
+  alias Aoc2018.Day<%= day %>.Part2
+
+  test "solves part 1" do
+    assert Part1.solve(String.split("")) == :ok
+  end
+
+  test "solves part 2" do
+    assert Part2.solve(String.split("")) == :ok
+  end
+end

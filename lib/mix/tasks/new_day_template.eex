@@ -1,0 +1,19 @@
+defmodule Aoc2018.Day<%= day %> do
+  defmodule Part1 do
+    @moduledoc """
+    """
+
+    def solve(input) do
+      input
+    end
+  end
+
+  defmodule Part2 do
+    @moduledoc """
+    """
+
+    def solve(input) do
+      input
+    end
+  end
+end
