@@ -1,8 +1,8 @@
-defmodule Aoc2018.Day03Test do
+defmodule Day03Test do
   use ExUnit.Case, async: true
 
-  alias Aoc2018.Day03.Part1
-  # alias Aoc2018.Day03.Part2
+  alias Day03.Part1
+  # alias Day03.Part2
 
   test "solves part 1" do
     assert Part1.solve(["#1 @ 1,3: 4x4", "#2 @ 3,1: 4x4", "#3 @ 5,5: 2x2"]) == 4

@@ -1,4 +1,4 @@
-defmodule Aoc2018.Day02 do
+defmodule Day02 do
   defmodule Part1 do
     @moduledoc """
     You stop falling through time, catch your breath, and check the screen on the device. "Destination reached. Current Year: 1518. Current Location: North Pole Utility Closet 83N10." You made it! Now, to find those anomalies.

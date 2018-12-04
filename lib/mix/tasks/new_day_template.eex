@@ -1,4 +1,4 @@
-defmodule Aoc2018.Day<%= day %> do
+defmodule Day<%= day %> do
   defmodule Part1 do
     @moduledoc """
     """

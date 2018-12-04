@@ -1,8 +1,8 @@
-defmodule Aoc2018.Day02Test do
+defmodule Day02Test do
   use ExUnit.Case, async: true
 
-  alias Aoc2018.Day02.Part1
-  alias Aoc2018.Day02.Part2
+  alias Day02.Part1
+  alias Day02.Part2
 
   test "solves part 1" do
     assert Part1.solve(String.split("abcdef bababc abbcde abcccd aabcdd abcdee ababab")) == 12

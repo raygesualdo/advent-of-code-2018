@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Solve do
 
     result =
       with_input(day, fn input ->
-        "Elixir.Aoc2018.Day#{day}.Part#{part}"
+        "Elixir.Day#{day}.Part#{part}"
         |> String.to_existing_atom()
         |> apply(:solve, [input])
       end)

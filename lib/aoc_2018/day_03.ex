@@ -1,4 +1,4 @@
-defmodule Aoc2018.Day03 do
+defmodule Day03 do
   defmodule Part1 do
     @moduledoc """
 
@@ -111,11 +111,11 @@ defmodule Aoc2018.Day03 do
     def solve(input) do
       parsed_input =
         input
-        |> Enum.map(&Aoc2018.Day03.Part1.parse_line/1)
+        |> Enum.map(&Day03.Part1.parse_line/1)
 
       populated_grid =
         parsed_input
-        |> Enum.reduce(Aoc2018.Day03.Part1.create_grid(), &Aoc2018.Day03.Part1.place_square/2)
+        |> Enum.reduce(Day03.Part1.create_grid(), &Day03.Part1.place_square/2)
 
       parsed_input
       |> Enum.reduce_while(populated_grid, &find_intact/2)
