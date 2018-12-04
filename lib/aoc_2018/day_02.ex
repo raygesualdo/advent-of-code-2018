@@ -61,7 +61,7 @@ defmodule Aoc2018.Day02 do
     def sum_tuples({a1, b1}, {a2, b2}), do: {a1 + a2, b1 + b2}
   end
 
-  defmodule Part02 do
+  defmodule Part2 do
     @moduledoc """
     Confident that your list of box IDs is complete, you're ready to find the boxes full of prototype fabric.
 
@@ -81,6 +81,39 @@ defmodule Aoc2018.Day02 do
     """
 
     def solve(input) do
+      input
+      |> Enum.map(&String.split(&1, "", trim: true))
+      |> compare_head()
+    end
+
+    def compare_head([head | tail]) do
+      common_characters =
+        tail
+        |> Enum.reduce_while("", &compare_strings(head, &1, &2))
+
+      case common_characters do
+        "" -> compare_head(tail)
+        _ -> common_characters
+      end
+    end
+
+    def compare_strings(string1, string2, _acc) do
+      {_, common_characters} =
+        Enum.zip(string1, string2)
+        |> Enum.reduce_while({false, ""}, &compare_characters/2)
+
+      case common_characters do
+        "" -> {:cont, ""}
+        _ -> {:halt, common_characters}
+      end
+    end
+
+    def compare_characters({char1, char2}, {has_duplicate, acc}) do
+      cond do
+        char1 != char2 and has_duplicate == false -> {:cont, {true, acc}}
+        char1 != char2 and has_duplicate == true -> {:halt, {true, ""}}
+        char1 == char2 -> {:cont, {has_duplicate, acc <> char1}}
+      end
     end
   end
 end
