@@ -29,7 +29,7 @@ defmodule Aoc2018.Day02 do
     def solve(input) do
       {doubles, triples} =
         input
-        |> Enum.map(&split/1)
+        |> Enum.map(&String.split(&1, "", trim: true))
         |> Enum.map(&group_by_count/1)
         |> Enum.map(&get_duplicates/1)
         |> Enum.reduce({0, 0}, &sum_tuples/2)
@@ -37,42 +37,28 @@ defmodule Aoc2018.Day02 do
       doubles * triples
     end
 
-    def split(string) do
-      string |> String.split("", trim: true)
-    end
-
     def group_by_count(list) do
-      list |> Enum.reduce(%{}, &set_count/2)
-    end
-
-    def set_count(key, map) do
-      Map.update(map, key, 1, &(&1 + 1))
+      list
+      |> Enum.reduce(%{}, fn key, map ->
+        Map.update(map, key, 1, &(&1 + 1))
+      end)
     end
 
     def get_duplicates(map) do
       values = Map.values(map)
-      doubles = has_doubles(values)
-      triples = has_triples(values)
+      doubles = has_duplicates(values, 2)
+      triples = has_duplicates(values, 3)
       {doubles, triples}
     end
 
-    def has_doubles(list) do
-      case Enum.member?(list, 2) do
+    def has_duplicates(list, frequency) do
+      case Enum.member?(list, frequency) do
         true -> 1
         false -> 0
       end
     end
 
-    def has_triples(list) do
-      case Enum.member?(list, 3) do
-        true -> 1
-        false -> 0
-      end
-    end
-
-    def sum_tuples({doubles_sum, triples_sum}, {doubles, triples}) do
-      {doubles_sum + doubles, triples_sum + triples}
-    end
+    def sum_tuples({a1, b1}, {a2, b2}), do: {a1 + a2, b1 + b2}
   end
 
   defmodule Part02 do
