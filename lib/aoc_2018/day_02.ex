@@ -29,7 +29,6 @@ defmodule Aoc2018.Day02 do
     def solve(input) do
       {doubles, triples} =
         input
-        |> String.split()
         |> Enum.map(&split/1)
         |> Enum.map(&group_by_count/1)
         |> Enum.map(&get_duplicates/1)

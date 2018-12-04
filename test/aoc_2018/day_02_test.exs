@@ -5,7 +5,7 @@ defmodule Aoc2018.Day02Test do
   # alias Aoc2018.Day02.Part2
 
   test "solves part 1" do
-    assert Part1.solve("abcdef bababc abbcde abcccd aabcdd abcdee ababab") == 12
+    assert Part1.solve(String.split("abcdef bababc abbcde abcccd aabcdd abcdee ababab")) == 12
   end
 
   test "Part1.group_by_count" do
