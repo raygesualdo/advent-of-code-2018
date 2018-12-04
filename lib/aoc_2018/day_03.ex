@@ -101,10 +101,43 @@ defmodule Aoc2018.Day03 do
 
   defmodule Part2 do
     @moduledoc """
+    Amidst the chaos, you notice that exactly one claim doesn't overlap by even a single square inch of fabric with any other claim. If you can somehow draw attention to it, maybe the Elves will be able to make Santa's suit after all!
+
+    For example, in the claims above, only claim 3 is intact after all claims are made.
+
+    What is the ID of the only claim that doesn't overlap?
     """
 
     def solve(input) do
-      input
+      parsed_input =
+        input
+        |> Enum.map(&Aoc2018.Day03.Part1.parse_line/1)
+
+      populated_grid =
+        parsed_input
+        |> Enum.reduce(Aoc2018.Day03.Part1.create_grid(), &Aoc2018.Day03.Part1.place_square/2)
+
+      parsed_input
+      |> Enum.reduce_while(populated_grid, &find_intact/2)
+    end
+
+    def find_intact(square, grid) do
+      fromY = square["top"]
+      toY = square["top"] + square["height"] - 1
+      fromX = square["left"]
+      toX = square["left"] + square["width"] - 1
+
+      Enum.flat_map(fromY..toY, fn y ->
+        Enum.map(fromX..toX, fn x ->
+          get_in(grid, [y, x])
+        end)
+      end)
+      |> Enum.into(%MapSet{})
+      |> MapSet.to_list()
+      |> case do
+        [:single_use] -> {:halt, square["id"]}
+        _ -> {:cont, grid}
+      end
     end
   end
 end
