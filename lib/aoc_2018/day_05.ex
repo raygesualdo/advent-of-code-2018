@@ -70,19 +70,16 @@ defmodule Day05 do
     def solve(input) do
       input
       |> String.codepoints()
-      |> create_permutations()
-      |> Enum.map(fn list ->
-        list
-        |> Enum.reduce([], &Day05.Part1.remove_duplicates/2)
-        |> length()
-      end)
+      |> get_permutation_lengths()
       |> Enum.min()
     end
 
-    def create_permutations(list) do
+    def get_permutation_lengths(list) do
       for char_code <- 97..122 do
         list
         |> Enum.reject(&(String.downcase(&1) == List.to_string([char_code])))
+        |> Enum.reduce([], &Day05.Part1.remove_duplicates/2)
+        |> length()
       end
     end
   end
