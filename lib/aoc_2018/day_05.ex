@@ -28,16 +28,14 @@ defmodule Day05 do
 
     def solve(input) do
       input
-      |> String.codepoints()
+      |> String.to_charlist()
       |> Enum.reduce([], &remove_duplicates/2)
       |> length()
     end
 
     def remove_duplicates(el, []), do: [el]
 
-    def remove_duplicates(el, list) do
-      [previous_el | remaining] = list
-
+    def remove_duplicates(el, [previous_el | remaining] = list) do
       case compare_characters?(el, previous_el) do
         true -> remaining
         false -> [el | list]
@@ -45,7 +43,7 @@ defmodule Day05 do
     end
 
     def compare_characters?(char1, char2) do
-      char1 != char2 and String.downcase(char1, :ascii) == String.downcase(char2, :ascii)
+      abs(char1 - char2) == 32
     end
   end
 
@@ -69,15 +67,15 @@ defmodule Day05 do
 
     def solve(input) do
       input
-      |> String.codepoints()
+      |> String.to_charlist()
       |> get_permutation_lengths()
       |> Enum.min()
     end
 
     def get_permutation_lengths(list) do
-      for char_code <- 97..122 do
+      for char_code <- ?A..?Z do
         list
-        |> Enum.reject(&(String.downcase(&1) == List.to_string([char_code])))
+        |> Enum.reject(&(&1 == char_code or &1 == char_code + 32))
         |> Enum.reduce([], &Day05.Part1.remove_duplicates/2)
         |> length()
       end
