@@ -13,7 +13,9 @@ defmodule Mix.Tasks.NewDay do
       data
     )
 
-    Mix.shell().info("Generated module and test files for day \"#{day}\"")
+    write_file("data/day#{day}.txt", "")
+
+    Mix.shell().info("Generated module, test, and data files for day \"#{day}\"")
   end
 
   def run([]) do
@@ -21,8 +23,12 @@ defmodule Mix.Tasks.NewDay do
   end
 
   def render_template(input_path, output_path, data) do
-    if File.exists?(output_path), do: raise("Module \"#{output_path}\" exists.")
     template = EEx.eval_file(input_path, data)
-    File.write!(output_path, template)
+    write_file(output_path, template)
+  end
+
+  def write_file(output_path, data) do
+    if File.exists?(output_path), do: raise("Module \"#{output_path}\" exists.")
+    File.write!(output_path, data)
   end
 end
