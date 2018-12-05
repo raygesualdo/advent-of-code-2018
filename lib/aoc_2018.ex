@@ -6,6 +6,8 @@ defmodule Aoc2018 do
   end
 
   def input(day) do
-    read_file(day)
+    data = read_file(day)
+
+    if length(data) == 1, do: List.first(data), else: data
   end
 end
