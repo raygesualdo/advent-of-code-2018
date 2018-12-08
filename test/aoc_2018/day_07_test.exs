@@ -27,6 +27,8 @@ defmodule Day07Test do
     Step D must be finished before step E can begin.
     Step F must be finished before step E can begin.
     "
-    assert Part2.solve(input |> String.trim() |> String.split("\n", trim: true)) == 15
+    assert Part2.solve(input |> String.trim() |> String.split("\n", trim: true)) == 253
+    # Below works with 2 workers and no added step duration
+    # assert Part2.solve(input |> String.trim() |> String.split("\n", trim: true)) == 15
   end
 end
