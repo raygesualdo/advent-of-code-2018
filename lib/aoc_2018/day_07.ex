@@ -71,15 +71,8 @@ defmodule Day07 do
     def run_steps(steps), do: run_steps(steps, [])
 
     def run_steps(steps, steps_run) do
-      steps_run_set = MapSet.new(steps_run)
-
       next_step =
-        steps
-        |> Enum.flat_map(fn {key, value} ->
-          if MapSet.subset?(value, steps_run_set), do: [key], else: []
-        end)
-        |> Enum.sort()
-        |> Enum.dedup()
+        get_available_steps(steps, steps_run)
         |> List.first()
 
       steps_run = [next_step | steps_run]
@@ -89,6 +82,17 @@ defmodule Day07 do
         0 -> steps_run |> Enum.reverse() |> Enum.join()
         _ -> run_steps(steps, steps_run)
       end
+    end
+
+    def get_available_steps(steps, steps_run) do
+      steps_run_set = MapSet.new(steps_run)
+
+      steps
+      |> Enum.flat_map(fn {key, value} ->
+        if MapSet.subset?(value, steps_run_set), do: [key], else: []
+      end)
+      |> Enum.sort()
+      |> Enum.dedup()
     end
   end
 
