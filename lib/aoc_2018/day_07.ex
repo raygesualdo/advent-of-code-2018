@@ -85,14 +85,14 @@ defmodule Day07 do
     end
 
     def get_available_steps(steps, steps_run) do
-      steps_run_set = MapSet.new(steps_run)
-
-      steps
-      |> Enum.flat_map(fn {key, value} ->
-        if MapSet.subset?(value, steps_run_set), do: [key], else: []
-      end)
-      |> Enum.sort()
-      |> Enum.dedup()
+      with steps_run_set <- MapSet.new(steps_run) do
+        steps
+        |> Enum.flat_map(fn {key, value} ->
+          if MapSet.subset?(value, steps_run_set), do: [key], else: []
+        end)
+        |> Enum.sort()
+        |> Enum.dedup()
+      end
     end
   end
 
@@ -148,20 +148,18 @@ defmodule Day07 do
 
       workers = create_workers(@workers)
 
-      iterate_with_workers(workers, Map.merge(steps, top_level_dependencies), [], %MapSet{}, 0)
+      iterate_with_workers(workers, Map.merge(steps, top_level_dependencies), [], 0)
     end
 
     def create_workers(quantity) do
-      for _ <- 1..quantity do
-        {"", 0}
-      end
+      for _ <- 1..quantity, do: {"", 0}
     end
 
-    def iterate_with_workers(workers, steps, steps_run, steps_in_progress, iteration) do
-      {workers, steps, steps_run, steps_in_progress} =
+    def iterate_with_workers(workers, steps, steps_run, iteration) do
+      {workers, steps, steps_run} =
         workers
         |> Enum.reduce(
-          {[], steps, steps_run, steps_in_progress},
+          {[], steps, steps_run},
           &run_worker/2
         )
 
@@ -169,64 +167,57 @@ defmodule Day07 do
 
       case Map.size(steps) do
         0 -> iteration
-        _ -> iterate_with_workers(workers, steps, steps_run, steps_in_progress, iteration + 1)
+        _ -> iterate_with_workers(workers, steps, steps_run, iteration + 1)
       end
     end
 
-    def run_worker({"", 0}, {workers, steps, steps_run, steps_in_progress}) do
-      if Enum.count(Part1.get_available_steps(steps, steps_run)) == 0 do
-        {[{"", 0} | workers], steps, steps_run, steps_in_progress}
-      else
-        started_step = start_step(steps_in_progress, Part1.get_available_steps(steps, steps_run))
-
-        workers = [{started_step, duration_by_key(started_step)} | workers]
-        steps_in_progress = steps_in_progress |> MapSet.put(started_step)
-
-        {workers, steps, steps_run, steps_in_progress}
-      end
+    def run_worker({id, worker_iteration}, {workers, steps, steps_run})
+        when worker_iteration > 1 do
+      {[{id, worker_iteration - 1} | workers], steps, steps_run}
     end
 
-    def run_worker({id, 1}, {workers, steps, steps_run, steps_in_progress}) do
-      {steps, steps_run} = stop_step(id, steps, steps_run)
-
-      steps_in_progress = steps_in_progress |> MapSet.delete(id)
+    def run_worker({id, _}, {workers, steps, steps_run}) do
+      {steps, steps_run} =
+        case id do
+          "" -> {steps, steps_run}
+          _ -> stop_step(id, steps, steps_run)
+        end
 
       if Enum.count(Part1.get_available_steps(steps, steps_run)) == 0 do
-        {[{"", 0} | workers], steps, steps_run, steps_in_progress}
+        {[{"", 0} | workers], steps, steps_run}
       else
-        started_step = start_step(steps_in_progress, Part1.get_available_steps(steps, steps_run))
+        started_step =
+          start_step(get_steps_in_progress(workers), Part1.get_available_steps(steps, steps_run))
 
         workers = [{started_step, duration_by_key(started_step)} | workers]
-        steps_in_progress = steps_in_progress |> MapSet.put(started_step)
 
-        {workers, steps, steps_run, steps_in_progress |> MapSet.put(started_step)}
+        {workers, steps, steps_run}
       end
-    end
-
-    def run_worker({id, worker_iteration}, {workers, steps, steps_run, steps_in_progress}) do
-      {[{id, worker_iteration - 1} | workers], steps, steps_run, steps_in_progress}
     end
 
     def start_step(steps_in_progress, available_dependencies) do
-      {next_step, _} =
-        available_dependencies
-        |> Enum.reject(&MapSet.member?(steps_in_progress, &1))
-        |> Enum.sort()
-        |> Enum.split(1)
-
-      next_step = next_step |> List.first()
-
-      case next_step do
+      available_dependencies
+      |> Enum.reject(&MapSet.member?(steps_in_progress, &1))
+      |> Enum.sort()
+      |> List.first()
+      |> case do
         nil -> ""
-        _ -> next_step
+        value -> value
       end
     end
 
     def stop_step(step, steps, steps_run) do
-      steps_run = [step | steps_run]
       steps = steps |> Map.delete(step)
+      steps_run = [step | steps_run]
 
       {steps, steps_run}
+    end
+
+    def get_steps_in_progress(workers) do
+      workers
+      |> Enum.reduce(%MapSet{}, fn worker, set ->
+        set |> MapSet.put(elem(worker, 0))
+      end)
     end
 
     def duration_by_key(""), do: 0
