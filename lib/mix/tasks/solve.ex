@@ -1,5 +1,6 @@
 defmodule Mix.Tasks.Solve do
   use Mix.Task
+  import Benchmark
 
   def run([day, part]) do
     day = to_string(day) |> String.pad_leading(2, "0")
@@ -7,9 +8,14 @@ defmodule Mix.Tasks.Solve do
 
     result =
       with_input(day, fn input ->
-        "Elixir.Day#{day}.Part#{part}"
-        |> String.to_existing_atom()
-        |> apply(:solve, [input])
+        module =
+          "Elixir.Day#{day}.Part#{part}"
+          |> String.to_existing_atom()
+
+        case System.get_env("MEASURE") do
+          nil -> apply(module, :solve, [input])
+          _ -> measure(apply(module, :solve, [input]))
+        end
       end)
 
     Mix.shell().info("Day #{day}, Part #{part}: #{result}")
