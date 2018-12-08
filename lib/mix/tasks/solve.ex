@@ -1,6 +1,22 @@
 defmodule Mix.Tasks.Solve do
   use Mix.Task
   import Benchmark
+  @shortdoc "Solves Advent of Code problems"
+  @moduledoc """
+  Solves problems using input from `data/`.
+
+  ## Usage
+
+  It can be invoked as follows:
+
+  `$ mix solve [day] [part]`
+
+  Day and part are optional. If `part` is omitted, both parts for the day will be run. If both `day` and `part` are omitted, all days and parts will be run.
+
+  ## Benchmarking
+
+  To run benchmarks when solving, set the `MEASURE` environment variable to `1`, e.g. `$ MEASURE=1 mix solve 2 1`.
+  """
 
   def run([day, part]) do
     day = to_string(day) |> String.pad_leading(2, "0")
