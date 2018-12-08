@@ -49,9 +49,12 @@ defmodule Day07 do
         input
         |> Enum.reduce({%{}, %MapSet{}, %MapSet{}}, &reduce_steps/2)
 
-      available_dependencies = MapSet.difference(dependencies, dependents)
+      top_level_dependencies =
+        dependencies
+        |> MapSet.difference(dependents)
+        |> Enum.reduce(%{}, &Map.put(&2, &1, %MapSet{}))
 
-      run_steps(steps, available_dependencies)
+      run_steps(Map.merge(steps, top_level_dependencies))
     end
 
     def reduce_steps(line, {steps, dependents, dependencies}) do
@@ -65,29 +68,26 @@ defmodule Day07 do
       end
     end
 
-    def run_steps(steps, available_dependencies), do: run_steps(steps, available_dependencies, [])
+    def run_steps(steps), do: run_steps(steps, [])
 
-    def run_steps(steps, available_dependencies, steps_run) do
-      [next_step | remaining_available_dependencies] =
-        available_dependencies |> MapSet.to_list() |> Enum.sort()
+    def run_steps(steps, steps_run) do
+      steps_run_set = MapSet.new(steps_run)
+
+      next_step =
+        steps
+        |> Enum.flat_map(fn {key, value} ->
+          if MapSet.subset?(value, steps_run_set), do: [key], else: []
+        end)
+        |> Enum.sort()
+        |> Enum.dedup()
+        |> List.first()
 
       steps_run = [next_step | steps_run]
       steps = steps |> Map.delete(next_step)
-      satisfied_dependencies = MapSet.new(steps_run)
-
-      satisfied_by_step =
-        steps
-        |> Enum.flat_map(fn {key, value} ->
-          if MapSet.subset?(value, satisfied_dependencies), do: [key], else: []
-        end)
-        |> MapSet.new()
-
-      available_dependencies =
-        MapSet.union(MapSet.new(remaining_available_dependencies), satisfied_by_step)
 
       case Map.size(steps) do
         0 -> steps_run |> Enum.reverse() |> Enum.join()
-        _ -> run_steps(steps, available_dependencies, steps_run)
+        _ -> run_steps(steps, steps_run)
       end
     end
   end
