@@ -10,4 +10,7 @@ defmodule Aoc2018 do
 
     if length(data) == 1, do: List.first(data), else: data
   end
+
+  def log(any), do: IO.inspect(any)
+  def log(any, label), do: IO.inspect(any, label: label)
 end
