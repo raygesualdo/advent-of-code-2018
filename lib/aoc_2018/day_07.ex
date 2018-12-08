@@ -98,10 +98,141 @@ defmodule Day07 do
 
   defmodule Part2 do
     @moduledoc """
+    As you're about to begin construction, four of the Elves offer to help. "The sun will set soon; it'll go faster if we work together." Now, you need to account for multiple people working on steps simultaneously. If multiple steps are available, workers should still begin them in alphabetical order.
+
+    Each step takes 60 seconds plus an amount corresponding to its letter: A=1, B=2, C=3, and so on. So, step A takes 60+1=61 seconds, while step Z takes 60+26=86 seconds. No time is required between steps.
+
+    To simplify things for the example, however, suppose you only have help from one Elf (a total of two workers) and that each step takes 60 fewer seconds (so that step A takes 1 second and step Z takes 26 seconds). Then, using the same instructions as above, this is how each second would be spent:
+
+    ```
+    Second   Worker 1   Worker 2   Done
+    0        C          .
+    1        C          .
+    2        C          .
+    3        A          F          C
+    4        B          F          CA
+    5        B          F          CA
+    6        D          F          CAB
+    7        D          F          CAB
+    8        D          F          CAB
+    9        D          .          CABF
+    10       E          .          CABFD
+    11       E          .          CABFD
+    12       E          .          CABFD
+    13       E          .          CABFD
+    14       E          .          CABFD
+    15       .          .          CABFDE
+    ```
+
+    Each row represents one second of time. The Second column identifies how many seconds have passed as of the beginning of that second. Each worker column shows the step that worker is currently doing (or . if they are idle). The Done column shows completed steps.
+
+    Note that the order of the steps has changed; this is because steps now take time to finish and multiple workers can begin multiple steps simultaneously.
+
+    In this example, it would take 15 seconds for two workers to complete these steps.
+
+    With 5 workers and the 60+ second step durations described above, how long will it take to complete all of the steps?
     """
 
+    @workers 5
+    @duration_padding 60
+
     def solve(input) do
-      input
+      {steps, dependents, dependencies} =
+        input
+        |> Enum.reduce({%{}, %MapSet{}, %MapSet{}}, &Part1.reduce_steps/2)
+
+      top_level_dependencies =
+        dependencies
+        |> MapSet.difference(dependents)
+        |> Enum.reduce(%{}, &Map.put(&2, &1, %MapSet{}))
+
+      workers = create_workers(@workers)
+
+      iterate_with_workers(workers, Map.merge(steps, top_level_dependencies), [], %MapSet{}, 0)
+    end
+
+    def create_workers(quantity) do
+      for _ <- 1..quantity do
+        {"", 0}
+      end
+    end
+
+    def iterate_with_workers(workers, steps, steps_run, steps_in_progress, iteration) do
+      {workers, steps, steps_run, steps_in_progress} =
+        workers
+        |> Enum.reduce(
+          {[], steps, steps_run, steps_in_progress},
+          &run_worker/2
+        )
+
+      workers = workers |> Enum.sort_by(&elem(&1, 1), &>=/2)
+
+      case Map.size(steps) do
+        0 -> iteration
+        _ -> iterate_with_workers(workers, steps, steps_run, steps_in_progress, iteration + 1)
+      end
+    end
+
+    def run_worker({"", 0}, {workers, steps, steps_run, steps_in_progress}) do
+      if Enum.count(Part1.get_available_steps(steps, steps_run)) == 0 do
+        {[{"", 0} | workers], steps, steps_run, steps_in_progress}
+      else
+        started_step = start_step(steps_in_progress, Part1.get_available_steps(steps, steps_run))
+
+        workers = [{started_step, duration_by_key(started_step)} | workers]
+        steps_in_progress = steps_in_progress |> MapSet.put(started_step)
+
+        {workers, steps, steps_run, steps_in_progress}
+      end
+    end
+
+    def run_worker({id, 1}, {workers, steps, steps_run, steps_in_progress}) do
+      {steps, steps_run} = stop_step(id, steps, steps_run)
+
+      steps_in_progress = steps_in_progress |> MapSet.delete(id)
+
+      if Enum.count(Part1.get_available_steps(steps, steps_run)) == 0 do
+        {[{"", 0} | workers], steps, steps_run, steps_in_progress}
+      else
+        started_step = start_step(steps_in_progress, Part1.get_available_steps(steps, steps_run))
+
+        workers = [{started_step, duration_by_key(started_step)} | workers]
+        steps_in_progress = steps_in_progress |> MapSet.put(started_step)
+
+        {workers, steps, steps_run, steps_in_progress |> MapSet.put(started_step)}
+      end
+    end
+
+    def run_worker({id, worker_iteration}, {workers, steps, steps_run, steps_in_progress}) do
+      {[{id, worker_iteration - 1} | workers], steps, steps_run, steps_in_progress}
+    end
+
+    def start_step(steps_in_progress, available_dependencies) do
+      {next_step, _} =
+        available_dependencies
+        |> Enum.reject(&MapSet.member?(steps_in_progress, &1))
+        |> Enum.sort()
+        |> Enum.split(1)
+
+      next_step = next_step |> List.first()
+
+      case next_step do
+        nil -> ""
+        _ -> next_step
+      end
+    end
+
+    def stop_step(step, steps, steps_run) do
+      steps_run = [step | steps_run]
+      steps = steps |> Map.delete(step)
+
+      {steps, steps_run}
+    end
+
+    def duration_by_key(""), do: 0
+
+    def duration_by_key(string) do
+      (string |> String.to_charlist() |> List.first()) - ?A + 1 + @duration_padding
     end
   end
 end
