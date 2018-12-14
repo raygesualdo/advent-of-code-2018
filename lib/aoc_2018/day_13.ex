@@ -248,10 +248,97 @@ defmodule Day13 do
 
   defmodule Part2 do
     @moduledoc """
+    There isn't much you can do to prevent crashes in this ridiculous system. However, by predicting the crashes, the Elves know where to be in advance and instantly remove the two crashing carts the moment any crash occurs.
+
+    They can proceed like this for a while, but eventually, they're going to run out of carts. It could be useful to figure out where the last cart that hasn't crashed will end up.
+
+    For example:
+
+    ```
+    />-<\
+    |   |
+    | /<+-\
+    | | | v
+    \>+</ |
+      |   ^
+      \<->/
+
+    /---\
+    |   |
+    | v-+-\
+    | | | |
+    \-+-/ |
+      |   |
+      ^---^
+
+    /---\
+    |   |
+    | /-+-\
+    | v | |
+    \-+-/ |
+      ^   ^
+      \---/
+
+    /---\
+    |   |
+    | /-+-\
+    | | | |
+    \-+-/ ^
+      |   |
+      \---/
+    ```
+
+    After four very expensive crashes, a tick ends with only one cart remaining; its final location is 6,4.
+
+    What is the location of the last cart at the end of the first tick where it is the only cart left?
     """
 
     def solve(input) do
-      input
+      {track, carts} =
+        input
+        |> Day13.Parser.parse()
+
+      tick(track, carts)
+    end
+
+    def tick(track, carts) do
+      carts
+      |> Enum.sort()
+      |> move_carts([], track)
+      |> case do
+        [{_, {x, y}, _}] -> "#{x},#{y}"
+        carts -> tick(track, carts)
+      end
+    end
+
+    def move_carts([], moved_carts, _), do: moved_carts
+
+    def move_carts(remaining_carts, moved_carts, track) do
+      [current_cart | remaining_carts] = remaining_carts
+      moved_cart = Day13.Part1.move_cart(current_cart, track)
+      {moved_carts, remaining_carts} = remove_collisions(moved_cart, moved_carts, remaining_carts)
+      move_carts(remaining_carts, moved_carts, track)
+    end
+
+    def remove_collisions({_, coordinates, _} = cart, other_carts, remaining_carts) do
+      other_carts_index =
+        other_carts
+        |> Enum.find_index(fn x -> elem(x, 1) == coordinates end)
+
+      remaining_carts_index =
+        remaining_carts
+        |> Enum.find_index(fn x -> elem(x, 1) == coordinates end)
+
+      cond do
+        other_carts_index != nil ->
+          {List.delete_at(other_carts, other_carts_index), remaining_carts}
+
+        remaining_carts_index != nil ->
+          {other_carts, List.delete_at(remaining_carts, remaining_carts_index)}
+
+        true ->
+          {[cart | other_carts], remaining_carts}
+      end
     end
   end
 
