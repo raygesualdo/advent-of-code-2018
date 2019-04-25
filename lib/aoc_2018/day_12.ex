@@ -137,8 +137,55 @@ defmodule Day12 do
     @moduledoc """
     """
 
+    import Benchmark
+    import Day12.Part1
+    @iteration_count 1_000_00
+    @padding ['.', '.', '.', '.']
+
     def solve(input) do
-      input
+      {state, transformer} =
+        input
+        |> parse_input
+
+      iterate({state, transformer}, 0, 1, List.flatten(state))
+    end
+
+    def iterate({_state, _}, _index, iteration, _) when iteration > @iteration_count do
+      # state
+      # |> Enum.with_index(index)
+      # |> Enum.filter(&(elem(&1, 0) == '#'))
+      # |> Enum.map(&elem(&1, 1))
+      # |> Enum.sum()
+      "No duplicate found"
+    end
+
+    def iterate({state, transformer}, index, iteration, initial_state) do
+      new_index = index - 2
+
+      new_state =
+        (@padding ++ state ++ @padding)
+        |> Enum.chunk_every(5, 1, :discard)
+        |> Enum.map(&List.flatten/1)
+        |> Enum.map(fn pattern ->
+          Map.get(transformer, pattern, '.')
+        end)
+
+      first_value_index = Enum.find_index(new_state, fn v -> v == '#' end)
+      new_index = new_index + first_value_index
+      new_state = Enum.drop(new_state, first_value_index) |> Enum.reverse()
+
+      first_value_index = Enum.find_index(new_state, fn v -> v == '#' end)
+      new_index = new_index + first_value_index
+      new_state = Enum.drop(new_state, first_value_index) |> Enum.reverse()
+
+      if new_state
+         |> List.flatten()
+         |> Enum.join()
+         |> String.contains?(initial_state |> Enum.join()) do
+        index
+      else
+        iterate({new_state, transformer}, new_index, iteration + 1, initial_state)
+      end
     end
   end
 end

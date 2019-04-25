@@ -55,16 +55,23 @@ defmodule Day09 do
     What is the winning Elf's score?
     """
 
-    import Aoc2018
-
     defmodule Game do
-      defstruct [:players, :circle, :num_of_players, :current_index, :endgame_trigger, :finished]
+      defstruct [
+        :players,
+        :circle,
+        :circle_size,
+        :num_of_players,
+        :current_index,
+        :endgame_trigger,
+        :finished
+      ]
 
       def new(num_of_players, endgame_trigger) do
         %Game{
           players: create_players(num_of_players),
           num_of_players: num_of_players,
           circle: [0],
+          circle_size: 1,
           current_index: 0,
           endgame_trigger: endgame_trigger,
           finished: false
@@ -76,12 +83,13 @@ defmodule Day09 do
           Enum.reduce_while(0..(game.num_of_players - 1), game, fn player_index, game ->
             marble = player_index + 1 + game.num_of_players * round
 
-            {points, circle, current_index} =
-              place_marble(game.circle, game.current_index, marble)
+            {points, circle, circle_size, current_index} =
+              place_marble(game.circle, game.circle_size, game.current_index, marble)
 
             game =
               game
               |> Map.put(:circle, circle)
+              |> Map.put(:circle_size, circle_size)
               |> Map.put(:current_index, current_index)
               |> Map.put(
                 :players,
@@ -104,20 +112,18 @@ defmodule Day09 do
         end
       end
 
-      defp place_marble([0], _, _), do: {0, [1, 0], 0}
+      defp place_marble([0], _, _, _), do: {0, [1, 0], 2, 0}
 
-      defp place_marble(circle, current_index, marble) do
-        circle_length = length(circle)
+      defp place_marble(circle, circle_size, current_index, marble) when rem(marble, 23) == 0 do
+        index_to_pop = get_pop_index(current_index, circle_size)
+        {popped_marble, circle} = List.pop_at(circle, index_to_pop)
+        {marble + popped_marble, circle, circle_size - 1, index_to_pop - 1}
+      end
 
-        if rem(marble, 23) != 0 do
-          index_to_insert = get_insert_index(current_index, circle_length)
-          circle = circle |> List.insert_at(index_to_insert, marble)
-          {0, circle, index_to_insert}
-        else
-          index_to_pop = get_pop_index(current_index, circle_length)
-          {popped_marble, circle} = List.pop_at(circle, index_to_pop)
-          {marble + popped_marble, circle, index_to_pop - 1}
-        end
+      defp place_marble(circle, circle_size, current_index, marble) do
+        index_to_insert = get_insert_index(current_index, circle_size)
+        circle = circle |> List.insert_at(index_to_insert, marble)
+        {0, circle, circle_size + 1, index_to_insert}
       end
 
       defp get_insert_index(current_index, list_length) do
@@ -159,8 +165,101 @@ defmodule Day09 do
     @moduledoc """
     """
 
-    def solve(input) do
-      input
+    import Day09.Part1
+
+    defmodule State do
+      @moduledoc """
+      Struct for storing the current state of the circle, scoreboard, and number of players
+      """
+      defstruct circle: {[], [0]}, scores: %{}, num: 0
     end
+
+    def solve(input) do
+      [num_of_players, final_marble] = parse(input)
+
+      state = place_marble(%State{num: num_of_players}, 1, final_marble * 100)
+
+      state.scores
+      |> Map.values()
+      |> Enum.max()
+    end
+
+    # last marble has been placed, game is over
+    def place_marble(state, current, last) when current > last do
+      state
+    end
+
+    # when next marble is a multiple of 23, move 7 to the left, remove it
+    # Add the value of the removed marble and the next marble to that players score
+    def place_marble(state, marble, last) when rem(marble, 23) == 0 do
+      circle = move_left(state.circle, 7)
+
+      # pop the current marble
+      current = get_current(circle)
+      circle = remove(circle)
+
+      # figure out the player and update the scoreboard
+      player = rem(marble, state.num)
+      scores = Map.update(state.scores, player, current + marble, &(&1 + current + marble))
+
+      # update state with new scores and new circle
+      %State{state | scores: scores, circle: circle}
+      |> place_marble(marble + 1, last)
+    end
+
+    # normal turn, rotate the circle and push the new marble
+    def place_marble(state, marble, last) do
+      %State{
+        state
+        | circle:
+            state.circle
+            |> move_right(2)
+            |> add(marble)
+      }
+      |> place_marble(marble + 1, last)
+    end
+
+    # move left by 0? easy
+    def move_left(circle, 0), do: circle
+
+    # if left list is empty, reverse the right list and set it as the left
+    def move_left({[], right}, steps) do
+      [current | reversed] = Enum.reverse(right)
+
+      # move the head of the left list over to the right.  The right list is never allowed
+      # to be empty as its head is always the current marble
+      move_left({reversed, [current]}, steps - 1)
+    end
+
+    # pop the head off the left list and push it onto the right
+    def move_left({[prev | left], right}, steps) do
+      move_left({left, [prev | right]}, steps - 1)
+    end
+
+    # move right by 0? easy
+    def move_right(circle, 0), do: circle
+
+    # if right list is empty, reverse the left list and set it as the right
+    def move_right({left, [current]}, steps) do
+      move_right({[], Enum.reverse([current | left])}, steps - 1)
+    end
+
+    # pop the head off the right list and push it into the right
+    def move_right({left, [current | right]}, steps) do
+      move_right({[current | left], right}, steps - 1)
+    end
+
+    # adds the new marble to the left of the current marble
+    def add({left, right}, marble) do
+      {left, [marble | right]}
+    end
+
+    # removes the current marble
+    def remove({left, [_current | right]}) do
+      {left, right}
+    end
+
+    # returns the current marble
+    def get_current({_, [current | _]}), do: current
   end
 end

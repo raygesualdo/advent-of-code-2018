@@ -238,13 +238,10 @@ defmodule Day16 do
       program
       |> Enum.drop(1)
       |> Enum.map(&Part1.string_to_instructions/1)
-      # |> IO.inspect()
       |> Enum.reduce({0, 0, 0, 0}, fn {op_code, _, _, _} = op, bef ->
         fun = Map.get(op_codes, op_code)
         apply(Ops, fun, [bef, op])
       end)
-
-      # |> IO.inspect()
     end
   end
 end
